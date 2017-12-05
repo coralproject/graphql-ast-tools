@@ -1,0 +1,9 @@
+/node_modules/
+/npm-debug.log
+/dist/
+/lib/
+/cjs/
+.DS_Store
+/coverage/
+/.nyc_output/
+

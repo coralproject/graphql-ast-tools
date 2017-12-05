@@ -1,0 +1,28 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "interface-name": [true, "never-prefix"],
+    "object-literal-sort-keys": false,
+    "forin": false,
+    "no-string-literal": false,
+    "no-switch-case-fall-through": true,
+    "max-classes-per-file": false,
+    "object-literal-key-quotes": [true, "as-needed"],
+    "ordered-imports": false,
+    "max-classes-per-file": false,
+    "no-unused-variable": [true, "react", {
+      "ignore-pattern": "^_"
+    }],
+    "variable-name": [true,
+      "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"
+    ],
+    "one-line": {
+      "options": [
+        "check-catch",
+        "check-finally",
+        "check-open-brace",
+        "check-whitespace"
+      ]
+    }
+  }
+}
