@@ -22,8 +22,8 @@ interface TransformDocumentOptions {
 
   // If given, transformDocument will use fragments from this map. If it does
   // not exist, it will try to find it in the DocumentNode and put it into the map.
-  // You can pass the same fragmentMap to multiple transformDocument operations to transform
-  // time when processing fragments.
+  // You can pass the same fragmentMap to multiple transformDocument operations to reduce
+  // time required to process fragments.
   fragmentMap?: { [name: string]: DocumentNode };
 }
 
