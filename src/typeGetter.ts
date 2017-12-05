@@ -1,5 +1,5 @@
 /**
- * TypeGetter which is used in `reduceDocument`.
+ * TypeGetter which is used in `transformDocument`.
  * Passing a path should return its type.
  *
  * Examples:
@@ -27,7 +27,7 @@ function getFieldType(parentType, fieldName) {
 }
 
 /**
- * Create a TypeGetter using introspectionData to use in `reduceDocument`.
+ * Create a TypeGetter using introspectionData to use in `transformDocument`.
  */
 export function createTypeGetter(introspectionData): TypeGetter {
   const types = {};

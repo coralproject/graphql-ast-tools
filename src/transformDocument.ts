@@ -51,7 +51,7 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
     variables,
   } = execContext;
 
-  const selectionsMap = definition.selectionSet.selections.reduce((o, sel) => {
+  const selectionsMap = definition.selectionSet.selections.transform((o, sel) => {
     if (variables && !shouldInclude(sel, variables)) {
 
       // Skip this entirely
@@ -150,29 +150,29 @@ function transformDefinition(definition, execContext, path = "", type = null) {
 }
 
 /**
- * Options used in reduceDocment
+ * Options used in transformDocment
  */
-export interface ReduceDocumentOptions {
+export interface TransformDocumentOptions {
 
-  // If given, reduceDocument will also resolve @include and @skip directives.
+  // If given, transformDocument will also resolve @include and @skip directives.
   variables?: { [name: string]: any };
 
-  // If given, reduceDocument can do a better job at reducing the document.
+  // If given, transformDocument can do a better job at reducing the document.
   typeGetter?: TypeGetter;
 
-  // If given, reduceDocument will use fragments from this map. If it does
+  // If given, transformDocument will use fragments from this map. If it does
   // not exist, it will try to find it in the DocumentNode and put it into the map.
-  // You can pass the same fragmentMap to multiple reduceDocument operations to reduce
+  // You can pass the same fragmentMap to multiple transformDocument operations to transform
   // time when processing fragments.
   fragmentMap?: { [name: string]: DocumentNode };
 }
 
 /**
- * reduceDocument will resolve NamedFragments and turn them into shallow InlineFragments or if possible
+ * transformDocument will resolve NamedFragments and turn them into shallow InlineFragments or if possible
  * merge them directly with Field nodes. If `options.variables` are given it also resolves @include
  * and @skip directives.
  */
-export function reduceDocument(document: DocumentNode, options: ReduceDocumentOptions = {}): DocumentNode {
+export function transformDocument(document: DocumentNode, options: TransformDocumentOptions = {}): DocumentNode {
   const mainDefinition = getMainDefinition(document);
   const fragments = getFragmentDefinitions(document);
   const operationDefinition = getOperationDefinition(document);
