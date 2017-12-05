@@ -27,7 +27,7 @@ function getDirectivesID(directives) {
 export function getDefinitionID(definition) {
 
   // Only merge when directives are exactly the same.
-  const trailing = definition.directives.length
+  const trailing = definition.directives && definition.directives.length
     ? `_${getDirectivesID(definition.directives)}`
     : "";
 
