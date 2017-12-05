@@ -51,7 +51,7 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
     variables,
   } = execContext;
 
-  const selectionsMap = definition.selectionSet.selections.transform((o, sel) => {
+  const selectionsMap = definition.selectionSet.selections.reduce((o, sel) => {
     if (variables && !shouldInclude(sel, variables)) {
 
       // Skip this entirely
