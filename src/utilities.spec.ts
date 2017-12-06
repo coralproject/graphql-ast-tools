@@ -1,3 +1,5 @@
+/* tslint:disable:object-literal-key-quotes trailing-comma */
+
 import {
   getDefinitionID,
   mergeDefinitions,
@@ -6,37 +8,36 @@ import {
 
 import { assert } from "chai";
 
-/* tslint:disable:object-literal-key-quotes trailing-comma */
-
 describe("utilities.ts", () => {
   describe("getDefinitionID", () => {
-    it("should return definition ID", () => {
-      const testcases = [
-        {
-          ast: {
-            "kind": "Field",
-            "name": { "kind": "Name", "value": "name" },
-            "alias": { "kind": "Name", "value": "aliased" },
-          },
-          expected: "Field_aliased",
+    const testcases = {
+      "should return field alias": {
+        ast: {
+          "kind": "Field",
+          "name": { "kind": "Name", "value": "name" },
+          "alias": { "kind": "Name", "value": "aliased" },
         },
-        {
-          ast: {
-            "kind": "InlineFragment",
-            "typeCondition": { "kind": "NamedType", "name": { "kind": "Name", "value": "Person" } },
-          },
-          expected: "InlineFragment_Person",
+        expected: "Field_aliased",
+      },
+      "should return inline fragment id": {
+        ast: {
+          "kind": "InlineFragment",
+          "typeCondition": { "kind": "NamedType", "name": { "kind": "Name", "value": "Person" } },
         },
-        {
-          ast: {
-            "kind": "FragmentSpread",
-            "name": { "kind": "Name", "value": "Person" },
-          },
-          expected: "FragmentSpread_Person",
+        expected: "InlineFragment_Person",
+      },
+      "should return fragmen spread id": {
+        ast: {
+          "kind": "FragmentSpread",
+          "name": { "kind": "Name", "value": "Person" },
         },
-      ];
+        expected: "FragmentSpread_Person",
+      },
+    };
 
-      testcases.forEach(({ ast, expected }) => {
+    Object.keys(testcases).forEach((testcase) => {
+      it(testcase, () => {
+        const { ast, expected } = testcases[testcase];
         assert.strictEqual(getDefinitionID(ast), expected);
       });
     });
