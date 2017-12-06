@@ -57,7 +57,7 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
       // Skip this entirely
       return o;
     }
-    if (sel.kind !== "FragmentSpread") {
+    if (sel.kind === "Field") {
       const transformed = transformDefinition(sel, execContext, path, gqlType);
       const name = getDefinitionID(sel);
 
@@ -71,7 +71,10 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
       return o;
     }
 
-    const fragment = getFragmentOrDie(sel.name.value, execContext);
+    // NamedFragment or InlineFragment.
+    const fragment = sel.kind === "FragmentSpread"
+      ? getFragmentOrDie(sel.name.value, execContext)
+      : transformDefinition(sel, execContext, path, sel.typeCondition.name.value);
     const typeCondition = fragment.typeCondition.name.value;
 
     // Turn NamedFragment into an InlineFragment.
@@ -135,9 +138,10 @@ function transformDefinition(definition, execContext, path = "", type = null) {
       type = typeGetter(path);
     }
   }
-  // InlineFragments
   else if (!type && typeGetter) {
-    type = typeGetter(path);
+    type = definition.typeCondition
+      ? definition.typeCondition.name.value
+      : typeGetter(path);
   }
 
   return {
