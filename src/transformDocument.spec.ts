@@ -142,10 +142,8 @@ describe("transformDocument.ts", () => {
                 name
                 age
                 ... on Hero {
-                  ... on User {
-                    name
-                    age
-                  }
+                  name
+                  age
                   title
                 }
               }

@@ -46,7 +46,7 @@ function getFragmentOrDie(name, execContext) {
 /**
  * Return selections with resolved named fragments and directives.
  */
-function getTransformedSelections(definition, path, gqlType, execContext) {
+function getTransformedSelections(definition, path, gqlTypes, execContext) {
   const {
     variables,
   } = execContext;
@@ -66,14 +66,14 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
     }
     else {
 
-      // NamedFragment or InlineFragment.
+      // FragmentSpread or InlineFragment.
       node = sel.kind === "FragmentSpread"
         ? getFragmentOrDie(sel.name.value, execContext)
         : transformDefinition(sel, execContext, path);
       const typeCondition = node.typeCondition.name.value;
 
       // Turn NamedFragment into an InlineFragment.
-      if (gqlType !== typeCondition || node.directives.length) {
+      if (!gqlTypes || gqlTypes.indexOf(typeCondition) === -1 || node.directives.length) {
         node = {
           ...node,
           kind: "InlineFragment",
@@ -132,33 +132,53 @@ function transformDefinition(definition, execContext, path = "") {
   }
 
   const { typeGetter, heuristics } = execContext;
+  let nextPath = path;
 
   if (definition.kind === "Field") {
     const fieldName = definition.name.value;
-    path = `${path}.${fieldName}`;
+    nextPath = `${path}.${fieldName}`;
+  }
+  else if (definition.kind === "InlineFragment") {
+    nextPath = `type.${definition.typeCondition.name.value}`;
   }
 
   let type = null;
 
   // Save the type into our heuristics.
   if (definition.typeCondition) {
-    heuristics[path] = definition.typeCondition.name.value;
+    const types = [definition.typeCondition.name.value];
+
+    // Add parent types.
+    const parentTypes = heuristics[path];
+    if (parentTypes) {
+      types.push(...parentTypes);
+    }
+
+    // Add known types.
+    if (heuristics[nextPath]) {
+      types.push(...heuristics[nextPath]);
+    }
+
+    // Deduplicate.
+    const deduplicated = types.filter((t, i) => types.indexOf(t) === i);
+
+    heuristics[nextPath] = deduplicated;
   }
 
   if (typeGetter) {
-    type = typeGetter(path);
+    type = typeGetter(nextPath);
   }
 
   if (!type) {
     // See if we know the type already.
-    type = heuristics[path];
+    type = heuristics[nextPath];
   }
 
   return {
     ...definition,
     selectionSet: {
       ...definition.selectionSet,
-      selections: getTransformedSelections(definition, path, type, execContext),
+      selections: getTransformedSelections(definition, nextPath, type, execContext),
     },
   };
 }

@@ -12,7 +12,7 @@
  * type.User.name => String
  * type.RootQuery.users = User
  */
-export type TypeGetter = (path: string) => string;
+export type TypeGetter = (path: string) => string[];
 
 function getObjectType(fieldType) {
   if (["NON_NULL", "LIST"].indexOf(fieldType.kind) > -1) {
@@ -34,9 +34,9 @@ export function createTypeGetter(introspectionData): TypeGetter {
   introspectionData.__schema.types.forEach((type) => types[type.name] = type);
 
   const result = {
-    query: introspectionData.__schema.queryType.name,
-    mutation: introspectionData.__schema.mutationType.name,
-    subscription: introspectionData.__schema.subscriptionType.name,
+    query: [introspectionData.__schema.queryType.name],
+    mutation: [introspectionData.__schema.mutationType.name],
+    subscription: [introspectionData.__schema.subscriptionType.name],
   };
 
   return (path) => {
@@ -52,7 +52,7 @@ export function createTypeGetter(introspectionData): TypeGetter {
       if (part === "type") {
         const type = parts[i + 1];
         const next = `type.${type}`;
-        result[next] = type;
+        result[next] = [type];
         currentPath = next;
         i++;
         continue;
@@ -63,7 +63,7 @@ export function createTypeGetter(introspectionData): TypeGetter {
         currentPath = nextPath;
         continue;
       }
-      result[nextPath] = getFieldType(types[result[currentPath]], part);
+      result[nextPath] = [getFieldType(types[result[currentPath]], part)];
       currentPath = nextPath;
     }
     return result[path];
