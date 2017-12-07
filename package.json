@@ -1,6 +1,6 @@
 {
   "name": "graphql-ast-tools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Tools for the GraphQL Abstract Syntax Tree",
   "main": "./cjs/index.js",
   "repository": "https://github.com/coralproject/graphql-ast-tools",
