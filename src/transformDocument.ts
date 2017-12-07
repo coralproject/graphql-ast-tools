@@ -57,62 +57,65 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
       // Skip this entirely
       return o;
     }
+
+    let node = null;
+    let merge = false;
+
     if (sel.kind === "Field") {
-      const transformed = transformDefinition(sel, execContext, path, gqlType);
-      const name = getDefinitionID(sel);
+      node = transformDefinition(sel, execContext, path, gqlType);
+    }
+    else {
+
+      // NamedFragment or InlineFragment.
+      node = sel.kind === "FragmentSpread"
+        ? getFragmentOrDie(sel.name.value, execContext)
+        : transformDefinition(sel, execContext, path, sel.typeCondition.name.value);
+      const typeCondition = node.typeCondition.name.value;
+
+      // Turn NamedFragment into an InlineFragment.
+      if (gqlType !== typeCondition || node.directives.length) {
+        node = {
+          ...node,
+          kind: "InlineFragment",
+        };
+      }
+      else {
+        merge = true;
+      }
+    }
+
+    // Merge directly into selections.
+    if (merge) {
+      const nodeSelections = node.selectionSet.selections;
+      nodeSelections.forEach((s) => {
+
+        if (variables && !shouldInclude(s, variables)) {
+
+          // Skip this entirely
+          return;
+        }
+
+        const selID = getDefinitionID(s);
+        if (!(selID in o)) {
+          o[selID] = s;
+          return;
+        }
+
+        o[selID] = mergeDefinitions(o[selID], s);
+      });
+    }
+    else {
+      const id = getDefinitionID(node);
 
       // Merge existing value.
-      if (name in o) {
-        o[name] = mergeDefinitions(o[name], transformed);
+      if (id in o) {
+        o[id] = mergeDefinitions(o[id], node);
         return o;
       }
 
-      o[name] = transformed;
-      return o;
+      o[id] = node;
     }
 
-    // NamedFragment or InlineFragment.
-    const fragment = sel.kind === "FragmentSpread"
-      ? getFragmentOrDie(sel.name.value, execContext)
-      : transformDefinition(sel, execContext, path, sel.typeCondition.name.value);
-    const typeCondition = fragment.typeCondition.name.value;
-
-    // Turn NamedFragment into an InlineFragment.
-    if (gqlType !== typeCondition || fragment.directives.length) {
-      const node = {
-        ...fragment,
-        kind: "InlineFragment",
-      };
-      const name = getDefinitionID(node);
-
-      // Merge existing value.
-      if (name in o) {
-        o[name] = mergeDefinitions(o[name], node);
-        return o;
-      }
-
-      o[name] = node;
-      return o;
-    }
-
-    // Merge NamedFragment directly into selections.
-    const fragmentSelections = fragment.selectionSet.selections;
-    fragmentSelections.forEach((s) => {
-
-      if (variables && !shouldInclude(s, variables)) {
-
-        // Skip this entirely
-        return;
-      }
-
-      const selName = getDefinitionID(s);
-      if (!(selName in o)) {
-        o[selName] = s;
-        return;
-      }
-
-      o[selName] = mergeDefinitions(o[selName], s);
-    });
     return o;
   }, {});
 
