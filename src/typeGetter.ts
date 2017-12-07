@@ -1,16 +1,17 @@
 /**
  * TypeGetter which is used in `transformDocument`.
- * Passing a path should return its type.
+ * Passing a path should return its type and implementing types.
  *
  * Examples:
- * query.users.name => String
- * query.users => User
- * query => RootQuery
+ * query.users.name => ["String"]
+ * query.users => ["User"]
+ * query.users.flagAction => ["FlagAction", "Action"]
+ * query => ["RootQuery"]
  *
  * Special case `type` followed by a type name will
  * resolve starting from that type, e.g.:
- * type.User.name => String
- * type.RootQuery.users = User
+ * type.User.name => ["String"]
+ * type.RootQuery.users = ["User"]
  */
 export type TypeGetter = (path: string) => string[];
 interface ImplementingTypesMap { [type: string]: string[]; }
