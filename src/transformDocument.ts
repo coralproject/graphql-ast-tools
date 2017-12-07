@@ -36,7 +36,7 @@ function getFragmentOrDie(name, execContext) {
     }
 
     const typeCondition = fragment.typeCondition.name.value;
-    const transformed = transformDefinition(fragment, execContext, `type.${typeCondition}`, typeCondition);
+    const transformed = transformDefinition(fragment, execContext, `type.${typeCondition}`);
     fragmentMap[name] = transformed;
   }
 
@@ -62,14 +62,14 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
     let merge = false;
 
     if (sel.kind === "Field") {
-      node = transformDefinition(sel, execContext, path, gqlType);
+      node = transformDefinition(sel, execContext, path);
     }
     else {
 
       // NamedFragment or InlineFragment.
       node = sel.kind === "FragmentSpread"
         ? getFragmentOrDie(sel.name.value, execContext)
-        : transformDefinition(sel, execContext, path, sel.typeCondition.name.value);
+        : transformDefinition(sel, execContext, path);
       const typeCondition = node.typeCondition.name.value;
 
       // Turn NamedFragment into an InlineFragment.
@@ -126,25 +126,32 @@ function getTransformedSelections(definition, path, gqlType, execContext) {
 /**
  * Resolve named fragments and directives in a definition.
  */
-function transformDefinition(definition, execContext, path = "", type = null) {
+function transformDefinition(definition, execContext, path = "") {
   if (!definition.selectionSet) {
     return definition;
   }
 
-  const { typeGetter } = execContext;
+  const { typeGetter, heuristics } = execContext;
 
   if (definition.kind === "Field") {
     const fieldName = definition.name.value;
     path = `${path}.${fieldName}`;
-
-    if (typeGetter) {
-      type = typeGetter(path);
-    }
   }
-  else if (!type && typeGetter) {
-    type = definition.typeCondition
-      ? definition.typeCondition.name.value
-      : typeGetter(path);
+
+  let type = null;
+
+  // Save the type into our heuristics.
+  if (definition.typeCondition) {
+    heuristics[path] = definition.typeCondition.name.value;
+  }
+
+  if (typeGetter) {
+    type = typeGetter(path);
+  }
+
+  if (!type) {
+    // See if we know the type already.
+    type = heuristics[path];
   }
 
   return {
@@ -192,6 +199,7 @@ export function transformDocument(document: DocumentNode, options: TransformDocu
     fragmentMap: options.fragmentMap || {},
     variables: options.variables,
     typeGetter: options.typeGetter || (() => null),
+    heuristics: {},
   };
 
   return {
