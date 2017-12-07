@@ -183,6 +183,10 @@ function transformDefinition(definition, execContext, path = "") {
   };
 }
 
+export interface FragmentMap {
+  [name: string]: DocumentNode;
+}
+
 /**
  * Options used in transformDocment
  */
@@ -198,7 +202,7 @@ export interface TransformDocumentOptions {
   // not exist, it will try to find it in the DocumentNode and put it into the map.
   // You can pass the same fragmentMap to multiple transformDocument operations to reduce
   // time required to process fragments.
-  fragmentMap?: { [name: string]: DocumentNode };
+  fragmentMap?: FragmentMap;
 }
 
 /**
