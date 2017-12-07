@@ -36,7 +36,7 @@ function getFragmentOrDie(name, execContext) {
     }
 
     const typeCondition = fragment.typeCondition.name.value;
-    const transformed = transformDefinition(fragment, { ...execContext, variables: {} }, `type.${typeCondition}`);
+    const transformed = transformDefinition(fragment, { ...execContext, variables: null }, `type.${typeCondition}`);
     fragmentMap[name] = transformed;
   }
 
