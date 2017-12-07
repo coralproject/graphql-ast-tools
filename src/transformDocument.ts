@@ -36,7 +36,7 @@ function getFragmentOrDie(name, execContext) {
     }
 
     const typeCondition = fragment.typeCondition.name.value;
-    const transformed = transformDefinition(fragment, execContext, `type.${typeCondition}`);
+    const transformed = transformDefinition(fragment, { ...execContext, variables: {} }, `type.${typeCondition}`);
     fragmentMap[name] = transformed;
   }
 
@@ -211,16 +211,29 @@ export interface TransformDocumentOptions {
  * and @skip directives.
  */
 export function transformDocument(document: DocumentNode, options: TransformDocumentOptions = {}): DocumentNode {
-  const mainDefinition = getMainDefinition(document);
+  const fragmentMap = options.fragmentMap || {};
   const fragments = getFragmentDefinitions(document);
   const operationDefinition = getOperationDefinition(document);
-  const path = operationDefinition
-    ? operationDefinition.operation
-    : `type.${mainDefinition.typeCondition.name.value}`;
+
+  let path;
+  let mainDefinition = getMainDefinition(document);
+
+  if (operationDefinition) {
+    path = operationDefinition.operation;
+  } else {
+    // FragmentDefinition
+    path = `type.${mainDefinition.typeCondition.name.value}`;
+
+    // Use cached fragment if available.
+    const name = mainDefinition.name.value;
+    if (name in fragmentMap) {
+      mainDefinition = fragmentMap[name];
+    }
+  }
 
   const execContext = {
     rawFragmentMap: createFragmentMap(fragments),
-    fragmentMap: options.fragmentMap || {},
+    fragmentMap,
     variables: options.variables,
     typeGetter: options.typeGetter || (() => null),
     heuristics: {},
