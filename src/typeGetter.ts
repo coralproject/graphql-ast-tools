@@ -13,6 +13,7 @@
  * type.RootQuery.users = User
  */
 export type TypeGetter = (path: string) => string[];
+interface ImplementingTypesMap { [type: string]: string[]; }
 
 function getObjectType(fieldType) {
   if (["NON_NULL", "LIST"].indexOf(fieldType.kind) > -1) {
@@ -24,6 +25,25 @@ function getObjectType(fieldType) {
 function getFieldType(parentType, fieldName) {
   const field = parentType.fields.find((f) => f.name === fieldName);
   return getObjectType(field.type);
+}
+
+function generateImplementingTypesMap(
+  introspectionResultData,
+): ImplementingTypesMap {
+  const typeMap: ImplementingTypesMap = {};
+  introspectionResultData.__schema.types.forEach((type) => {
+    if (type.kind === "UNION" || type.kind === "INTERFACE") {
+      type.possibleTypes.forEach(
+        (implementingType) => {
+          if (!typeMap[implementingType.name]) {
+            typeMap[implementingType.name] = [];
+          }
+          typeMap[implementingType.name].push(type.name);
+        },
+      );
+    }
+  });
+  return typeMap;
 }
 
 /**
@@ -39,6 +59,8 @@ export function createTypeGetter(introspectionData): TypeGetter {
     subscription: [introspectionData.__schema.subscriptionType.name],
   };
 
+  const implementingTypesMap = generateImplementingTypesMap(introspectionData);
+
   return (path) => {
     if (result[path]) {
       return result[path];
@@ -53,6 +75,9 @@ export function createTypeGetter(introspectionData): TypeGetter {
         const type = parts[i + 1];
         const next = `type.${type}`;
         result[next] = [type];
+        if (implementingTypesMap[type]) {
+          result[next].push(...implementingTypesMap[type]);
+        }
         currentPath = next;
         i++;
         continue;
@@ -63,7 +88,9 @@ export function createTypeGetter(introspectionData): TypeGetter {
         currentPath = nextPath;
         continue;
       }
-      result[nextPath] = [getFieldType(types[result[currentPath]], part)];
+      const fieldType = getFieldType(types[result[currentPath][0]], part);
+      result[nextPath] = [fieldType];
+      result[nextPath].push(...implementingTypesMap[fieldType]);
       currentPath = nextPath;
     }
     return result[path];

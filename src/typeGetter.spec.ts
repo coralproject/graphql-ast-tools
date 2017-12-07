@@ -18,8 +18,8 @@ describe("typeGetter.ts", () => {
         "subscription.commentAdded": ["Comment"],
         "subscription.commentAdded.id": ["ID"],
         "mutation": ["RootMutation"],
-        "mutation.createFlag": ["CreateFlagResponse"],
-        "mutation.createFlag.flag": ["FlagAction"],
+        "mutation.createFlag": ["CreateFlagResponse", "Response"],
+        "mutation.createFlag.flag": ["FlagAction", "Action"],
         "type.Asset": ["Asset"],
         "type.Asset.settings": ["Settings"],
       };

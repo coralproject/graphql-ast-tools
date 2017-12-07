@@ -174,12 +174,47 @@ describe("transformDocument.ts", () => {
           }
         `,
       },
+      "should utilize typegetter": {
+        ast: `
+            {
+              user {
+                ... on User {
+                  name
+                  ... on Hero {
+                    title
+                    ... on User {
+                      name
+                      age
+                    }
+                  }
+                }
+              }
+            }
+          `,
+        typeMap: {
+          "query.user": ["User"],
+          "type.Hero": ["Hero", "User"],
+        },
+        expected: `
+          {
+            user {
+              name
+              ... on Hero {
+                title
+                name
+                age
+              }
+            }
+          }
+        `,
+      },
     };
 
     Object.keys(testcases).forEach((testcase) => {
       it(testcase, () => {
-        const { ast, expected, variables } = testcases[testcase];
-        transformAndAssert(ast, expected, { variables });
+        const { ast, expected, variables, typeMap } = testcases[testcase];
+        const typeGetter = typeMap ? (path) => typeMap[path] : undefined;
+        transformAndAssert(ast, expected, { variables, typeGetter });
       });
     });
   });
